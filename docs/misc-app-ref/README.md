@@ -4,12 +4,16 @@
 
 附录部分包括:
 
+* [为什么学编译](/misc-app-ref/why).
 * [实验环境使用说明](/misc-app-ref/environment).
 * [SysY 语言规范](/misc-app-ref/sysy-spec).
 * [SysY 运行时库](/misc-app-ref/sysy-runtime).
 * [Koopa IR 规范](/misc-app-ref/koopa).
+* [Libkoopa C 接口](/misc-app-ref/lib-koopa)
 * [RISC-V 指令速查](/misc-app-ref/riscv-insts).
 * [在线评测使用说明](/misc-app-ref/oj).
+* [参考文献](/misc-app-ref/references).
+* [示例编译器](/misc-app-ref/examples).
 
 同学们在遇到关于语言/IR 定义的问题, 或者是 OJ 使用上的问题时, 可以直接查阅附录.
 
