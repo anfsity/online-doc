@@ -1,6 +1,11 @@
 # Libkoopa C 接口
 
-`koopa.h` 头文件中定义了 Koopa IR 相关的 C 语言接口。通过这些接口，你可以解析文本形式的 Koopa IR，将其转换为内存中的数据结构（Raw Program），或者生成 LLVM IR 等。
+[`koopa.h`](https://github.com/pku-minic/koopa/blob/master/libkoopa/include/koopa.h) 头文件中定义了 Koopa IR 相关的 C 语言接口。`libkoopa` 是 Koopa IR 的核心处理库，提供了从文本解析、构建内存数据结构（Raw Program）、到导出 LLVM IR 等一系列功能。
+
+通过这些接口，你可以：
+1.  **解析**: 将文本形式的 Koopa IR 代码解析为内存中的不透明程序对象 (`koopa_program_t`)。
+2.  **构建**: 将不透明程序对象转换为易于遍历和分析的原始程序结构 (`koopa_raw_program_t`)。
+3.  **导出**: 将程序对象导出为 Koopa IR 文本、LLVM IR 文本等。
 
 使用该库时，需要在源文件中包含头文件：
 
@@ -10,9 +15,15 @@
 
 并在编译时链接 `libkoopa` 库（如果你使用模板 makefile/cmake 文件，我们已经帮你链接好了）。
 
-所有接口的声明均在 `koopa.h` 中。此外，库中涉及的所有内存（如 `koopa_program_t` 和 `koopa_raw_program_builder_t`）都需要手动管理释放，具体请参考各函数的文档说明。
+### 内存管理
+
+`libkoopa` 使用 C 语言接口，因此不具备自动内存管理功能（如 RAII）。库中涉及的所有对象（如 `koopa_program_t` 和 `koopa_raw_program_builder_t`）都需要手动管理生命周期。请务必在使用完毕后调用对应的 `_delete` 函数释放内存，以避免内存泄漏。
+
+详细的内存管理规则请参考各函数的文档说明。
 
 ## 结构体
+
+Koopa IR 在内存中有与之对应的 C 结构体表示。其中 `koopa_raw_program_t` 是整个程序的根节点，包含了全局变量和函数列表。而 `koopa_raw_value_t` 是最核心的数据结构，几乎所有的 Koopa IR 实体（指令、参数、常量等）都由它表示。
 
 ### koopa_raw_program_t
 
@@ -553,9 +564,9 @@ typedef struct {
   koopa_raw_basic_block_t true_bb;
   /// Target if condition is `false`.
   koopa_raw_basic_block_t false_bb;
-  /// Arguments of `true` target..
+  /// Arguments of `true` target.
   koopa_raw_slice_t true_args;
-  /// Arguments of `false` target..
+  /// Arguments of `false` target.
   koopa_raw_slice_t false_args;
 } koopa_raw_branch_t;
 ```
@@ -565,7 +576,7 @@ typedef struct {
 - `cond`: 条件值。
 - `true_bb`: 条件为真时跳转的基本块。
 - `false_bb`: 条件为假时跳转的基本块。
-- `true_args`: 跳转到 true_bb 时传递的参数列表；
+- `true_args`: 跳转到 true_bb 时传递的参数列表。
 - `false_args`: 跳转到 false_bb 时传递的参数列表。
 
 **说明**
@@ -588,7 +599,7 @@ br %cond, %then, %else
 typedef struct {
   /// Target.
   koopa_raw_basic_block_t target;
-  /// Arguments of target..
+  /// Arguments of target.
   koopa_raw_slice_t args;
 } koopa_raw_jump_t;
 ```
@@ -660,6 +671,8 @@ ret 0
 ```
 
 ## 枚举
+
+`libkoopa` 定义了一系列枚举类型，用于表示错误码 (`koopa_error_code_t`)、类型标签 (`koopa_raw_type_tag_t`)、值标签 (`koopa_raw_value_tag_t`) 等。其中 `koopa_raw_value_tag_t` 尤为重要，它决定了 `koopa_raw_value_kind_t` 联合体中具体存储的是哪种指令数据。
 
 ### koopa_error_code_t
 
@@ -913,6 +926,13 @@ typedef enum koopa_raw_binary_op koopa_raw_binary_op_t;
 - `KOOPA_RBO_SAR`: 算术右移 (`sar`).
 
 ## 函数
+
+`libkoopa` 提供了一系列 C 语言接口，分为几类：
+- **解析**: 从文件、字符串、stdin 等输入解析 Koopa IR。
+- **构建**: 构建易于分析的 Raw Program 结构。
+- **导出**: 将程序对象导出为 Koopa IR 文本或 LLVM IR 文本。
+
+!>所有由 `libkoopa` 返回的对象（如 `program`, `builder`）都必须使用对应的 `_delete` 函数手动释放。
 
 ### koopa_parse_from_file
 
