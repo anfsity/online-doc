@@ -60,7 +60,7 @@
   * [SysY 语言规范](/misc-app-ref/sysy-spec)
   * [SysY 运行时库](/misc-app-ref/sysy-runtime)
   * [Koopa IR 规范](/misc-app-ref/koopa)
-  * [Libkoopa C 接口](/misc-app-ref/lib-koopa)
+  * [Libkoopa C 接口](/misc-app-ref/libkoopa)
   * [RISC-V 指令速查](/misc-app-ref/riscv-insts)
   * [在线评测使用说明](/misc-app-ref/oj)
   * [参考文献](/misc-app-ref/references)
