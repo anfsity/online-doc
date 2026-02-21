@@ -76,3 +76,9 @@ main:
 以上的这些新名词你可能并不熟悉, 编译器的工作原理你也许更是知之甚少. 但相信上完这门课程, 你将对这些内容, 乃至计算机系统底层的工作原理, 拥有一个崭新的认识.
 
 [让我们开始吧! Link start!](/preface/)
+
+## 文档贡献者
+
+感谢以下 GitHub 用户对本文档的贡献:
+
+[![贡献者列表](https://contrib.rocks/image?repo=pku-minic/online-doc)](https://github.com/pku-minic/online-doc/graphs/contributors)

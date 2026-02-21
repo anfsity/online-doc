@@ -17,3 +17,7 @@ To launch a local server for testing, run:
 ```
 $ docsify serve docs
 ```
+
+## All Thanks To Our Contributors
+
+[![Contributors](https://contrib.rocks/image?repo=pku-minic/online-doc)](https://github.com/pku-minic/online-doc/graphs/contributors)
