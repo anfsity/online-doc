@@ -1,11 +1,11 @@
-# Libkoopa C 接口
+# Koopa IR C 接口 (`libkoopa`)
 
-[`koopa.h`](https://github.com/pku-minic/koopa/blob/master/libkoopa/include/koopa.h) 头文件中定义了 Koopa IR 相关的 C 语言接口. `libkoopa` 是 Koopa IR 的核心处理库, 提供了从文本解析, 构建内存数据结构 (Raw Program), 到导出 LLVM IR 等一系列功能.
+`libkoopa` 是面向 C/C++ 的 Koopa IR 处理库, 提供了从解析 Koopa IR 文本, 构建内存数据结构 (raw program), 到导出 LLVM IR 等一系列功能. Koopa IR 相关的 C 语言接口 可参考 `koopa` 仓库中的 [`koopa.h`](https://github.com/pku-minic/koopa/blob/master/libkoopa/include/koopa.h) 头文件.
 
 通过这些接口, 你可以:
 
-1. **解析**: 将文本形式的 Koopa IR 代码解析为内存中的不透明程序对象 (`koopa_program_t`).
-2. **构建**: 将不透明程序对象转换为易于遍历和分析的原始程序结构 (`koopa_raw_program_t`).
+1. **解析**: 将文本形式的 Koopa IR 代码解析为内存中的不透明程序对象 ([`koopa_program_t`](#koopa_program_t)).
+2. **构建**: 将不透明程序对象转换为易于遍历和分析的原始程序结构 ([`koopa_raw_program_t`](#koopa_raw_program_t)).
 3. **导出**: 将程序对象导出为 Koopa IR 文本, LLVM IR 文本等.
 
 使用该库时, 需要在源文件中包含头文件:
@@ -14,21 +14,21 @@
 #include "koopa.h"
 ```
 
-并在编译时链接 `libkoopa` 库 (如果你使用模板 Makefile/CMake 文件, 我们已经帮你链接好了).
+并在编译时链接 `libkoopa` 库 (如果你使用模板 Makefile/CMake 文件则无须额外处理, 我们已经帮你链接好了).
 
-`libkoopa` 使用 C 语言接口, 因此不具备自动内存管理功能 (如 RAII). 库中涉及的所有对象 (如 `koopa_program_t` 和 `koopa_raw_program_builder_t`) 都需要手动管理生命周期. 请务必在使用完毕后调用对应的 `_delete` 函数释放内存, 以避免内存泄漏.
+`libkoopa` 使用 C 语言接口, 因此不具备自动内存管理功能 (如 RAII). 库中涉及的所有对象 (如 [`koopa_program_t`](#koopa_program_t) 和 [`koopa_raw_program_builder_t`](#koopa_raw_program_builder_t)) 都需要手动管理生命周期. 请务必在使用完毕后调用对应的 `_delete` 函数释放内存, 以避免内存泄漏.
 
 详细的内存管理规则请参考各函数的文档说明.
 
 ## 结构体
 
-Koopa IR 在内存中有与之对应的 C 结构体表示. 其中 `koopa_raw_program_t` 是整个程序的根节点, 包含了全局变量和函数列表. 而 `koopa_raw_value_t` 是最核心的数据结构, 几乎所有的 Koopa IR 实体 (指令, 参数, 常量等) 都由它表示.
+Koopa IR 在内存中有与之对应的 C 结构体表示. 其中 [`koopa_raw_program_t`](#koopa_raw_program_t) 是整个程序的根节点, 包含了全局变量和函数列表. 而 [`koopa_raw_value_t`](#koopa_raw_value_t) 是最核心的数据结构, 几乎所有的 Koopa IR 实体 (指令, 参数, 常量等) 都由它表示.
 
 ### koopa_raw_slice_t
 
 **描述**
 
-Koopa IR 中的切片结构体, 它本质上是一个带有长度信息的只读指针数组. 如果你熟悉 C++/Rust 的话, `koopa_raw_slice_t` 就类似于 C++ 的 `std::span` 或 Rust 的 slice.
+Koopa IR 中的切片结构体, 它本质上是一个带有长度信息的只读指针数组. 如果你熟悉 C++/Rust 的话, [`koopa_raw_slice_t`](#koopa_raw_slice_t) 就类似于 C++ 的 `std::span` 或 Rust 的 slice.
 
 **定义**
 
@@ -711,7 +711,7 @@ typedef struct {
 
 **成员**
 
-- `value`: 返回值. 如果函数无返回值 (即返回类型为 unit/`void`), 则为 null.
+- `value`: 返回值. 如果函数无返回值 (即返回类型为 unit), 则为 null.
 
 **说明**
 
@@ -723,7 +723,7 @@ ret 0
 
 ## 枚举
 
-`libkoopa` 定义了一系列枚举类型, 用于表示错误码 ([`koopa_error_code_t`](#koopa_error_code_t)) , 类型标签 ([`koopa_raw_type_tag_t`](#koopa_raw_type_tag_t)) , 值标签 ([`koopa_raw_value_tag_t`](#koopa_raw_value_tag_t)) 等. 其中 `koopa_raw_value_tag_t` 尤为重要, 它决定了 [`koopa_raw_value_kind_t`](#koopa_raw_value_kind_t) 联合体中具体存储的是哪种指令数据.
+`libkoopa` 定义了一系列枚举类型, 用于表示错误码 ([`koopa_error_code_t`](#koopa_error_code_t)) , 类型标签 ([`koopa_raw_type_tag_t`](#koopa_raw_type_tag_t)) , 值标签 ([`koopa_raw_value_tag_t`](#koopa_raw_value_tag_t)) 等. 其中 [`koopa_raw_value_tag_t`](#koopa_raw_value_tag_t) 尤为重要, 它决定了 [`koopa_raw_value_kind_t`](#koopa_raw_value_kind_t) 联合体中具体存储的是哪种指令数据.
 
 ### koopa_error_code_t
 
@@ -835,7 +835,7 @@ typedef enum {
 **成员**
 
 - `KOOPA_RTT_INT32`: 32 位整数类型 (`i32`).
-- `KOOPA_RTT_UNIT`: 单元类型 (`void` / unit).
+- `KOOPA_RTT_UNIT`: 单元类型 (unit), 对应于 C/SysY 语言的 `void`.
 - `KOOPA_RTT_ARRAY`: 数组类型. 此时类型结构体的 `data.array` 字段有值.
 - `KOOPA_RTT_POINTER`: 指针类型. 此时类型结构体的 `data.pointer` 字段有值.
 - `KOOPA_RTT_FUNCTION`: 函数原型类型. 此时类型结构体的 `data.function` 字段有值.
@@ -1008,7 +1008,7 @@ typedef void *koopa_raw_program_builder_t;
 
 **描述**
 
-Raw 文件, 文件描述符 (`int`, UNIX/Linux 等) 或文件句柄 (`HANDLE`, Windows).
+文件描述符 (`int`, UNIX/Linux 等操作系统) 或文件句柄 ([`HANDLE`](https://learn.microsoft.com/en-us/windows/win32/fileio/file-handles), Windows 操作系统).
 
 **定义**
 
@@ -1231,7 +1231,7 @@ koopa_delete_program(program);
 
 如果 `buffer` 参数为 null, 函数将计算生成字符串所需的长度 (**不包含** null 终止符), 并将结果存储在 `len` 指向的变量中. 这通常用于确定缓冲区所需的最小大小.
 
-`len` 同时代表了最多可以往 buffer 里写多少个字节 (input) 和实际上写了多少个字节 (output).
+`len` 同时代表了最多可以往 buffer 里写多少个字节 (调用者传入) 和实际上写了多少个字节 (函数输出).
 
 **定义**
 
@@ -1267,7 +1267,7 @@ fmt::print("Koopa IR length: {}\n", len);
 len = len + 1;
 std::string buffer(len, '\0');
 ret = koopa_dump_to_string(program, buffer.data(), &len);
-// len 同时代表了最多可以往 buffer 里写多少个字节 (input) 和实际上写了多少个字节 (output).
+// len 同时代表了最多可以往 buffer 里写多少个字节 (调用者传入) 和实际上写了多少个字节 (函数输出).
 // 所以如果这里去除掉 len = len + 1, 再这么写:
 // std::string buffer(len + 1, '\0');
 // ret = koopa_dump_to_string(program, buffer.data(), &len);
@@ -1550,7 +1550,7 @@ void koopa_delete_raw_program_builder(koopa_raw_program_builder_t builder);
 
 [`koopa_raw_program_t`](#koopa_raw_program_t) 是 Koopa IR 的内存表示形式, 包含了程序的完整结构信息 (函数, 基本块, 指令等), 便于遍历和分析.
 
-生成的原始程序 (`koopa_raw_program_t`) 的生命周期依附于构建器 (`builder`). 只要构建器未被删除, 原始程序就有效.
+生成的原始程序 ([`koopa_raw_program_t`](#koopa_raw_program_t)) 的生命周期依附于构建器 (`builder`). 只要构建器未被删除, 原始程序就有效.
 
 **定义**
 
@@ -1589,7 +1589,7 @@ koopa_delete_program(program);
 
 将给定的原始程序 ([`koopa_raw_program_t`](#koopa_raw_program_t)) 逆向转换回 Koopa IR 程序对象 ([`koopa_program_t`](#koopa_program_t)).
 
-`libkoopa` 的文本输出函数(如 [`koopa_dump_to_string`](#koopa_dump_to_string)) 仅接受 `koopa_program_t`. 如果你手动构建或修改了 `raw` 结构, 并希望将其导出为 Koopa IR 文本形式, 则可以使用此函数将其转换为 `program` 对象.
+`libkoopa` 的文本输出函数(如 [`koopa_dump_to_string`](#koopa_dump_to_string)) 仅接受 [`koopa_program_t`](#koopa_program_t). 如果你手动构建或修改了 `raw` 结构, 并希望将其导出为 Koopa IR 文本形式, 则可以使用此函数将其转换为 `program` 对象.
 
 **定义**
 
