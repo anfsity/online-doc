@@ -28,7 +28,7 @@ Koopa IR 在内存中有与之对应的 C 结构体表示. 其中 `koopa_raw_pro
 
 **描述**
 
-Koopa IR 中的切片结构体, 它本质上是一个带有长度信息的只读指针数组. 如果你熟悉 C++/Rust 的话, 类似于 C++ 的 `std::span` 或 Rust 的 slice, 用于表示一段连续的内存区域.
+Koopa IR 中的切片结构体, 它本质上是一个带有长度信息的只读指针数组. 如果你熟悉 C++/Rust 的话, `koopa_raw_slice_t` 就类似于 C++ 的 `std::span` 或 Rust 的 slice.
 
 **定义**
 
@@ -72,8 +72,8 @@ typedef struct {
 
 **成员**
 
-- `values`: 全局变量定义的切片. 切片中的元素类型为 `koopa_raw_value_t`.
-- `funcs`: 函数定义的切片. 切片中的元素类型为 `koopa_raw_function_t`.
+- `values`: 全局变量定义的切片. 切片中的元素类型为 [`koopa_raw_value_t`](#koopa_raw_value_t).
+- `funcs`: 函数定义的切片. 切片中的元素类型为 [`koopa_raw_function_t`](#koopa_raw_function_t).
 
 **说明**
 
@@ -117,8 +117,8 @@ typedef const koopa_raw_function_data_t *koopa_raw_function_t;
 
 - `ty`: 函数类型.
 - `name`: 函数名称 (包含 `%` 或 `@` 前缀).
-- `params`: 函数参数列表. 元素为 `koopa_raw_value_t`.
-- `bbs`: 基本块列表. 元素为 `koopa_raw_basic_block_t`. 如果为空 (`bbs.len == 0`), 表示这是函数声明.
+- `params`: 函数参数列表. 元素为 [`koopa_raw_value_t`](#koopa_raw_value_t).
+- `bbs`: 基本块列表. 元素为 [`koopa_raw_basic_block_t`](#koopa_raw_basic_block_t). 列表中的首个基本块为函数的入口基本块. 如果列表为空 (`bbs.len == 0`), 则该函数为函数声明.
 
 **说明**
 
@@ -165,8 +165,8 @@ typedef const koopa_raw_basic_block_data_t *koopa_raw_basic_block_t;
 
 - `name`: 基本块名称 (包含 `%` 或 `@` 前缀). 此字段可以为 null, 此时基本块没有名称.
 - `params`: 基本块参数列表.
-- `used_by`: 使用了该基本块的 User 列表 (对于基本块来说, 引用它的通常是跳转指令). 通过遍历这个列表, 你可以找到当前基本块的所有前驱.
-- `insts`: 指令列表. 元素为 `koopa_raw_value_t`.
+- `used_by`: 使用了该基本块的 User 列表. 如果一个值引用了当前基本块 (对于基本块来说, 引用它的通常是跳转指令), 这个值就会出现在 `used_by` 列表中.
+- `insts`: 指令列表. 元素为 [`koopa_raw_value_t`](#koopa_raw_value_t).
 
 **说明**
 
@@ -209,7 +209,7 @@ typedef const koopa_raw_value_data_t *koopa_raw_value_t;
 - `ty`: 值的类型.
 - `name`: 值的名称 (包含 `%` 或 `@` 前缀). 此字段可以为 null, 此时该值没有名称.
 - `used_by`: 使用了该值的 User 列表.
-- `kind`: values的具体种类, 参考 [`koopa_raw_value_kind_t`](#koopa_raw_value_kind_t) 的定义.
+- `kind`: value 的具体种类, 参考 [`koopa_raw_value_kind_t`](#koopa_raw_value_kind_t) 的定义.
 
 **说明**
 
@@ -293,8 +293,8 @@ typedef struct {
 
 **成员**
 
-- `tag`: 类型的具体种类, 如整数, 指针等. 参考 [`koopa_raw_type_tag_t`](#koopa_raw_type_tag_t) 的定义.
-- `data`: 类型附带的额外数据. 某些种类的类型会附带额外数据, 例如数组类型会附带数组的元素类型, 以及数组长度. 开发者应根据 `tag` 字段的具体内容, 决定是否需要进一步访问 `data` 字段.
+- `tag`: 值的具体种类. 参考 [`koopa_raw_value_tag_t`](#koopa_raw_value_tag_t) 的定义.
+- `data`: 值附带的额外数据. 开发者应根据 `tag` 字段的具体内容, 决定是否需要进一步访问 `data` 字段.
 
 ### koopa_raw_integer_t
 
@@ -340,7 +340,7 @@ typedef struct {
 
 **成员**
 
-- `elems`: 元素列表, 元素类型为 `koopa_raw_value_t`.
+- `elems`: 元素列表, 元素类型为 [`koopa_raw_value_t`](#koopa_raw_value_t).
 
 **说明**
 
@@ -373,7 +373,9 @@ typedef struct {
 
 ```koopa
 fun @foo(@x: i32) {
-  %0 = add @x, 1  // @x 对应 func_arg_ref, index = 0
+  %0 = add @x, 1
+  // tag: KOOPA_RVT_FUNC_ARG_REF
+  // index: 0 (@x 是第 0 个参数)
 }
 ```
 
@@ -399,8 +401,10 @@ typedef struct {
 **说明**
 
 ```koopa
-%end(%a_3: i32): // %a_3 对应 block_arg_ref, index = 0
+%end(%a_3: i32):
   ret %a_3
+  // tag: KOOPA_RVT_BLOCK_ARG_REF
+  // index: 0 (%a_3 是第 0 个参数)
 ```
 
 ### koopa_raw_global_alloc_t
@@ -426,6 +430,7 @@ typedef struct {
 
 ```koopa
 global @x = alloc i32, 0
+// tag: KOOPA_RVT_GLOBAL_ALLOC
 // init: 0 (INTEGER value)
 ```
 
@@ -452,6 +457,7 @@ typedef struct {
 
 ```koopa
 %0 = load @x
+// tag: KOOPA_RVT_LOAD
 // src: @x
 ```
 
@@ -481,6 +487,7 @@ typedef struct {
 
 ```koopa
 store 1, @x
+// tag: KOOPA_RVT_STORE
 // value: 1
 // dest: @x
 ```
@@ -511,6 +518,7 @@ typedef struct {
 
 ```koopa
 %0 = getptr @arr, 1
+// tag: KOOPA_RVT_GET_PTR
 // src: @arr
 // index: 1
 ```
@@ -541,6 +549,7 @@ typedef struct {
 
 ```koopa
 %0 = getelemptr @arr, 1
+// tag: KOOPA_RVT_GET_ELEM_PTR
 // src: @arr
 // index: 1
 ```
@@ -574,6 +583,7 @@ typedef struct {
 
 ```koopa
 %0 = add %a, %b
+// tag: KOOPA_RVT_BINARY
 // op: KOOPA_RBO_ADD
 // lhs: %a
 // rhs: %b
@@ -614,6 +624,7 @@ typedef struct {
 
 ```koopa
 br %cond, %then, %else
+// tag: KOOPA_RVT_BRANCH
 // cond: %cond
 // true_bb: %then
 // false_bb: %else
@@ -647,6 +658,7 @@ typedef struct {
 
 ```koopa
 jump %target
+// tag: KOOPA_RVT_JUMP
 // target: %target
 // args: 空 slice
 ```
@@ -677,6 +689,7 @@ typedef struct {
 
 ```koopa
 call @func(1, 2)
+// tag: KOOPA_RVT_CALL
 // callee: @func
 // args: [1, 2]
 ```
@@ -704,12 +717,13 @@ typedef struct {
 
 ```koopa
 ret 0
+// tag: KOOPA_RVT_RETURN
 // value: 0
 ```
 
 ## 枚举
 
-`libkoopa` 定义了一系列枚举类型, 用于表示错误码 (`koopa_error_code_t`) , 类型标签 (`koopa_raw_type_tag_t`) , 值标签 (`koopa_raw_value_tag_t`) 等. 其中 `koopa_raw_value_tag_t` 尤为重要, 它决定了 `koopa_raw_value_kind_t` 联合体中具体存储的是哪种指令数据.
+`libkoopa` 定义了一系列枚举类型, 用于表示错误码 ([`koopa_error_code_t`](#koopa_error_code_t)) , 类型标签 ([`koopa_raw_type_tag_t`](#koopa_raw_type_tag_t)) , 值标签 ([`koopa_raw_value_tag_t`](#koopa_raw_value_tag_t)) 等. 其中 `koopa_raw_value_tag_t` 尤为重要, 它决定了 [`koopa_raw_value_kind_t`](#koopa_raw_value_kind_t) 联合体中具体存储的是哪种指令数据.
 
 ### koopa_error_code_t
 
@@ -766,7 +780,7 @@ typedef enum koopa_error_code koopa_error_code_t;
 
 **描述**
 
-Raw slice 中元素的类型枚举. 用于运行时判断 `koopa_raw_slice_t` 中存储的具体数据类型.
+Raw slice 中元素的类型枚举. 用于运行时判断 [`koopa_raw_slice_t`](#koopa_raw_slice_t) 中存储的具体数据类型.
 
 **定义**
 
@@ -799,7 +813,7 @@ typedef enum koopa_raw_slice_item_kind koopa_raw_slice_item_kind_t;
 
 **描述**
 
-Koopa IR 中类型的标签枚举. 用于区分 `koopa_raw_type_t` 具体是哪种类型(如整数, 数组, 指针等).
+Koopa IR 中类型的标签枚举. 用于区分 [`koopa_raw_type_t`](#koopa_raw_type_t) 具体是哪种类型(如整数, 数组, 指针等).
 
 **定义**
 
@@ -830,7 +844,7 @@ typedef enum {
 
 **描述**
 
-Koopa IR 中值 (指令) 的标签枚举. 用于区分 `koopa_raw_value_t` 具体是哪种指令或值 (如加载, 存储, 二元运算等).
+Koopa IR 中值 (指令) 的标签枚举. 用于区分 [`koopa_raw_value_t`](#koopa_raw_value_t) 具体是哪种指令或值 (如加载, 存储, 二元运算等).
 
 **定义**
 
@@ -1082,7 +1096,7 @@ koopa_error_code_t koopa_parse_from_raw(koopa_raw_file_t file,
 
 **参数**
 
-- `file`: 已经打开的文件描述符. 该参数的类型 `koopa_raw_file_t` 在 Windows 上为 `HANDLE` (文件句柄), 在 Linux/macOS 等平台为 `int` (文件描述符).
+- `file`: 已经打开的文件描述符. 该参数的类型 `koopa_raw_file_t` 在 UNIX/Linux 等平台为 `int` (文件描述符), 在 Windows 上为 `HANDLE` (文件句柄).
 - `program`: 指向 `koopa_program_t` 的指针. 解析成功后, 该指针指向的内存将被更新为新创建的 Koopa IR 程序对象.
 
 **返回值**
